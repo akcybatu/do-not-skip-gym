@@ -18,6 +18,7 @@ export const LoginScreen: React.FC = () => {
     email: '',
     password: '',
   });
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
 
   const { 
     signIn, 
@@ -27,7 +28,11 @@ export const LoginScreen: React.FC = () => {
     clearError, 
     showEmailConfirmation, 
     pendingEmail, 
-    clearEmailConfirmation 
+    clearEmailConfirmation,
+    clearPasswordReset,
+    sendPasswordReset,
+    showPasswordReset,
+    passwordResetSent
   } = useAuthStore();
 
   const validateForm = (): boolean => {
@@ -70,6 +75,28 @@ export const LoginScreen: React.FC = () => {
 
   const isExistingUserError = error && error.includes('account with this email address already exists');
 
+  const handleForgotPassword = async () => {
+    if (!formData.email.trim()) {
+      Alert.alert('Error', 'Please enter your email address');
+      return;
+    }
+
+    if (!formData.email.includes('@')) {
+      Alert.alert('Error', 'Please enter a valid email address');
+      return;
+    }
+
+    clearError();
+    await sendPasswordReset(formData.email.trim());
+  };
+
+  const handleBackToLogin = () => {
+    setShowForgotPassword(false);
+    clearError();
+    clearEmailConfirmation();
+    clearPasswordReset();
+  };
+
   return (
     <KeyboardAvoidingView 
       style={styles.container} 
@@ -93,15 +120,62 @@ export const LoginScreen: React.FC = () => {
               </Text>
               <TouchableOpacity
                 style={styles.backToLoginButton}
-                onPress={clearEmailConfirmation}
+                onPress={handleBackToLogin}
               >
                 <Text style={styles.backToLoginText}>Back to Login</Text>
               </TouchableOpacity>
             </View>
           )}
 
+          {/* Password Reset Confirmation */}
+          {showPasswordReset && (
+            <View style={styles.confirmationContainer}>
+              <Text style={styles.confirmationTitle}>🔑 Password Reset Email Sent!</Text>
+              
+              {passwordResetSent && (
+                <View style={styles.successBanner}>
+                  <Text style={styles.successText}>✅ Password reset email sent successfully!</Text>
+                </View>
+              )}
+              
+              {error && (
+                <View style={styles.errorContainer}>
+                  <Text style={styles.errorText}>{error}</Text>
+                </View>
+              )}
+              
+              <Text style={styles.confirmationText}>
+                We've sent a password reset link to{' '}
+                <Text style={styles.emailText}>{pendingEmail}</Text>.
+              </Text>
+              <Text style={styles.confirmationText}>
+                Click the link in your email to reset your password in your browser, then return here to sign in with your new password.
+              </Text>
+              
+              <View style={styles.passwordResetActions}>
+                <TouchableOpacity
+                  style={styles.resendResetButton}
+                  onPress={handleForgotPassword}
+                  disabled={isLoading}
+                >
+                  <Text style={styles.resendResetButtonText}>
+                    {isLoading ? '⏳ Sending...' : '🔄 Resend Reset Email'}
+                  </Text>
+                </TouchableOpacity>
+                
+                <TouchableOpacity
+                  style={styles.backToLoginButton}
+                  onPress={handleBackToLogin}
+                  disabled={isLoading}
+                >
+                  <Text style={styles.backToLoginText}>Back to Login</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+
           {/* Form Container */}
-          {!showEmailConfirmation && (
+          {!showEmailConfirmation && !showPasswordReset && (
             <View style={styles.formContainer}>
             {/* Email Input */}
             <View style={styles.inputContainer}>
@@ -166,6 +240,17 @@ export const LoginScreen: React.FC = () => {
             >
               <Text style={styles.secondaryButtonText}>
                 {isLoading ? 'Signing Up...' : 'Sign Up'}
+              </Text>
+            </TouchableOpacity>
+
+            {/* Forgot Password Link */}
+            <TouchableOpacity
+              style={styles.forgotPasswordLink}
+              onPress={handleForgotPassword}
+              disabled={isLoading}
+            >
+              <Text style={styles.forgotPasswordText}>
+                Forgot Password?
               </Text>
             </TouchableOpacity>
             </View>
@@ -313,5 +398,47 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     marginTop: 8,
     textAlign: 'center',
+  },
+  successBanner: {
+    backgroundColor: '#d4edda',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#c3e6cb',
+  },
+  successText: {
+    color: '#155724',
+    fontSize: 14,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  passwordResetActions: {
+    marginTop: 16,
+    gap: 12,
+    width: '100%',
+  },
+  resendResetButton: {
+    backgroundColor: '#007AFF',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  resendResetButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  forgotPasswordLink: {
+    alignSelf: 'center',
+    paddingVertical: 12,
+    marginTop: 8,
+  },
+  forgotPasswordText: {
+    color: '#007AFF',
+    fontSize: 16,
+    fontWeight: '500',
+    textDecorationLine: 'underline',
   },
 });

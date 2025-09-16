@@ -9,6 +9,9 @@ interface AuthActions {
   clearError: () => void;
   checkUser: () => Promise<void>;
   clearEmailConfirmation: () => void;
+  clearPasswordReset: () => void;
+  sendPasswordReset: (email: string) => Promise<void>;
+  resetPassword: (token: string, newPassword: string) => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
@@ -20,6 +23,9 @@ export const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
   error: null,
   showEmailConfirmation: false,
   pendingEmail: null,
+  showPasswordReset: false,
+  passwordResetSent: false,
+  resetToken: null,
 
   // Actions
   signIn: async (email: string, password: string) => {
@@ -134,6 +140,86 @@ export const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
 
   clearEmailConfirmation: () => {
     set({ showEmailConfirmation: false, pendingEmail: null });
+  },
+
+  clearPasswordReset: () => {
+    set({ 
+      showPasswordReset: false, 
+      passwordResetSent: false, 
+      pendingEmail: null, 
+      resetToken: null 
+    });
+  },
+
+  sendPasswordReset: async (email: string) => {
+    try {
+      set({ isLoading: true, error: null, passwordResetSent: false });
+
+      console.log('Sending password reset email to:', email);
+
+      // Use our custom reset page that deep links back to the app
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: 'http://localhost:3000', // Our password reset server
+      });
+
+      if (error) {
+        console.error('Password reset error:', error);
+        throw error;
+      }
+
+      console.log('Password reset email sent successfully');
+
+      set({
+        isLoading: false,
+        showPasswordReset: true,
+        pendingEmail: email,
+        passwordResetSent: true,
+        error: null,
+      });
+
+    } catch (error: any) {
+      console.error('Send password reset failed:', error);
+      set({
+        error: error.message || 'Failed to send password reset email',
+        isLoading: false,
+        passwordResetSent: false,
+      });
+    }
+  },
+
+  resetPassword: async (token: string, newPassword: string) => {
+    try {
+      set({ isLoading: true, error: null });
+
+      console.log('Resetting password with token');
+
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+
+      if (error) {
+        console.error('Password reset error:', error);
+        throw error;
+      }
+
+      console.log('Password reset successful');
+
+      set({
+        isLoading: false,
+        showPasswordReset: false,
+        passwordResetSent: false,
+        resetToken: null,
+        pendingEmail: null,
+        error: null,
+      });
+
+    } catch (error: any) {
+      console.error('Password reset failed:', error);
+      set({
+        error: error.message || 'Failed to reset password',
+        isLoading: false,
+      });
+    }
   },
 
   checkUser: async () => {

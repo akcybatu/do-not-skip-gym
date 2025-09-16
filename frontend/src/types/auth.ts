@@ -23,4 +23,7 @@ export interface AuthState {
   error: string | null;
   showEmailConfirmation: boolean;
   pendingEmail: string | null;
+  showPasswordReset: boolean;
+  passwordResetSent: boolean;
+  resetToken: string | null;
 }
