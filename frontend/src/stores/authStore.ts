@@ -65,10 +65,27 @@ export const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
       });
 
       if (error) {
+        // Handle specific Supabase errors for existing users
+        if (error.message.includes('User already registered') || 
+            error.message.includes('already been registered') ||
+            error.message.includes('already exists')) {
+          throw new Error('An account with this email address already exists. Please sign in instead.');
+        }
         throw error;
       }
 
-      // Show email confirmation message instead of auto-signing in
+      // Check if user was created or already exists
+      if (data.user && !data.user.email_confirmed_at && data.user.identities && data.user.identities.length === 0) {
+        // This indicates the user already exists but is not confirmed
+        throw new Error('An account with this email address already exists but is not confirmed. Please check your email for the confirmation link or sign in if you have already confirmed your account.');
+      }
+
+      if (data.user && data.user.identities && data.user.identities.length === 0) {
+        // User already exists and is confirmed
+        throw new Error('An account with this email address already exists. Please sign in instead.');
+      }
+
+      // Show email confirmation message for new users
       set({
         isLoading: false,
         showEmailConfirmation: true,

@@ -68,6 +68,8 @@ export const LoginScreen: React.FC = () => {
     if (error) clearError();
   };
 
+  const isExistingUserError = error && error.includes('account with this email address already exists');
+
   return (
     <KeyboardAvoidingView 
       style={styles.container} 
@@ -133,8 +135,15 @@ export const LoginScreen: React.FC = () => {
 
             {/* Error Message */}
             {error && (
-              <View style={styles.errorContainer}>
-                <Text style={styles.errorText}>{error}</Text>
+              <View style={[styles.errorContainer, isExistingUserError && styles.existingUserContainer]}>
+                <Text style={[styles.errorText, isExistingUserError && styles.existingUserText]}>
+                  {error}
+                </Text>
+                {isExistingUserError && (
+                  <Text style={styles.suggestionText}>
+                    💡 Try using the "Sign In" button above with your existing credentials.
+                  </Text>
+                )}
               </View>
             )}
 
@@ -290,5 +299,19 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  existingUserContainer: {
+    backgroundColor: '#fff3cd',
+    borderColor: '#ffeaa7',
+  },
+  existingUserText: {
+    color: '#856404',
+  },
+  suggestionText: {
+    color: '#856404',
+    fontSize: 13,
+    fontStyle: 'italic',
+    marginTop: 8,
+    textAlign: 'center',
   },
 });
