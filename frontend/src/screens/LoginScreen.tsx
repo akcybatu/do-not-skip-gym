@@ -19,7 +19,16 @@ export const LoginScreen: React.FC = () => {
     password: '',
   });
 
-  const { signIn, signUp, isLoading, error, clearError } = useAuthStore();
+  const { 
+    signIn, 
+    signUp, 
+    isLoading, 
+    error, 
+    clearError, 
+    showEmailConfirmation, 
+    pendingEmail, 
+    clearEmailConfirmation 
+  } = useAuthStore();
 
   const validateForm = (): boolean => {
     if (!formData.email.trim()) {
@@ -69,8 +78,29 @@ export const LoginScreen: React.FC = () => {
           {/* App Title */}
           <Text style={styles.title}>🏋️‍♂️ Do Not Skip Gym</Text>
 
+          {/* Email Confirmation Message */}
+          {showEmailConfirmation && (
+            <View style={styles.confirmationContainer}>
+              <Text style={styles.confirmationTitle}>📧 Check Your Email!</Text>
+              <Text style={styles.confirmationText}>
+                You have received an email to confirm your email address at{' '}
+                <Text style={styles.emailText}>{pendingEmail}</Text>.
+              </Text>
+              <Text style={styles.confirmationText}>
+                Please confirm to be eligible to sign-in to your account.
+              </Text>
+              <TouchableOpacity
+                style={styles.backToLoginButton}
+                onPress={clearEmailConfirmation}
+              >
+                <Text style={styles.backToLoginText}>Back to Login</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
           {/* Form Container */}
-          <View style={styles.formContainer}>
+          {!showEmailConfirmation && (
+            <View style={styles.formContainer}>
             {/* Email Input */}
             <View style={styles.inputContainer}>
               <Text style={styles.label}>📧 Email</Text>
@@ -129,7 +159,8 @@ export const LoginScreen: React.FC = () => {
                 {isLoading ? 'Signing Up...' : 'Sign Up'}
               </Text>
             </TouchableOpacity>
-          </View>
+            </View>
+          )}
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -220,5 +251,44 @@ const styles = StyleSheet.create({
     color: '#d63031',
     fontSize: 14,
     textAlign: 'center',
+  },
+  confirmationContainer: {
+    backgroundColor: '#e8f5e8',
+    padding: 24,
+    borderRadius: 16,
+    marginBottom: 32,
+    borderWidth: 1,
+    borderColor: '#c8e6c9',
+    alignItems: 'center',
+  },
+  confirmationTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#2e7d32',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  confirmationText: {
+    fontSize: 16,
+    color: '#2e7d32',
+    textAlign: 'center',
+    marginBottom: 12,
+    lineHeight: 22,
+  },
+  emailText: {
+    fontWeight: 'bold',
+    color: '#1b5e20',
+  },
+  backToLoginButton: {
+    marginTop: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    backgroundColor: '#4caf50',
+    borderRadius: 8,
+  },
+  backToLoginText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

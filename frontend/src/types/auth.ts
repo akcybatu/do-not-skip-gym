@@ -21,4 +21,6 @@ export interface AuthState {
   isLoading: boolean;
   isAuthenticated: boolean;
   error: string | null;
+  showEmailConfirmation: boolean;
+  pendingEmail: string | null;
 }

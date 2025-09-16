@@ -8,6 +8,7 @@ interface AuthActions {
   signOut: () => Promise<void>;
   clearError: () => void;
   checkUser: () => Promise<void>;
+  clearEmailConfirmation: () => void;
 }
 
 export const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
@@ -17,6 +18,8 @@ export const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
   isLoading: false,
   isAuthenticated: false,
   error: null,
+  showEmailConfirmation: false,
+  pendingEmail: null,
 
   // Actions
   signIn: async (email: string, password: string) => {
@@ -54,7 +57,7 @@ export const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
 
   signUp: async (email: string, password: string) => {
     try {
-      set({ isLoading: true, error: null });
+      set({ isLoading: true, error: null, showEmailConfirmation: false });
 
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -65,23 +68,20 @@ export const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
         throw error;
       }
 
-      if (data.user) {
-        // TODO: Create profile in backend when we implement it
-        set({
-          user: {
-            id: data.user.id,
-            email: data.user.email!,
-            created_at: data.user.created_at,
-          },
-          isAuthenticated: true,
-          isLoading: false,
-        });
-      }
+      // Show email confirmation message instead of auto-signing in
+      set({
+        isLoading: false,
+        showEmailConfirmation: true,
+        pendingEmail: email,
+        isAuthenticated: false,
+        user: null,
+      });
     } catch (error: any) {
       set({
         error: error.message || 'An error occurred during sign up',
         isLoading: false,
         isAuthenticated: false,
+        showEmailConfirmation: false,
       });
     }
   },
@@ -113,6 +113,10 @@ export const useAuthStore = create<AuthState & AuthActions>((set, get) => ({
 
   clearError: () => {
     set({ error: null });
+  },
+
+  clearEmailConfirmation: () => {
+    set({ showEmailConfirmation: false, pendingEmail: null });
   },
 
   checkUser: async () => {
