@@ -1,0 +1,24 @@
+---
+description: Describes Goals and General Architecture of Project
+globs:
+alwaysApply: true
+---
+
+I would like to create a react native IOS workout app. I would like you to help me design this app, but please do not start writing code only write code when I confirm for the specific part we are discussing.
+
+Goal of this app is to be able to track my gym progress. 
+
+I would like to use the following stack:
+- React Native for Frontend
+- Python for Backend
+- TypeScript for Frontend
+- FastAPI for Backend
+-Zustand for React State Management
+-Supabase for Databases
+- Expo Go (for testing on mobile device)
+
+I would like my app to have the following components:
+-Login Page
+-Main Content in Two Views switched by slider
+-- View 1: Logging Current Workout Session
+-- View 2: Viewing Statistics of Previous Workout Session
