@@ -18,7 +18,8 @@ export const WorkoutProgress: React.FC = () => {
     exerciseLogs,
     setCurrentStep,
     completeWorkout,
-    setCurrentExerciseLogId 
+    setCurrentExerciseLogId,
+    exercises
   } = useWorkoutStore();
 
   const handleAddExercise = () => {
@@ -64,8 +65,66 @@ export const WorkoutProgress: React.FC = () => {
     return formatDuration(new Date(activeWorkout.t_create));
   };
 
+  const getWorkoutTypesSummary = () => {
+    if (!activeWorkout || activeWorkout.selectedMuscleGroups.length === 0) return 'None';
+    
+    // Get completed exercises grouped by muscle group
+    const completedExercises = exerciseLogs.filter(log => log.t_complete);
+    const exercisesByMuscleGroup: Record<string, number> = {};
+    
+    // Initialize all selected muscle groups with 0
+    activeWorkout.selectedMuscleGroups.forEach(group => {
+      exercisesByMuscleGroup[group] = 0;
+    });
+    
+    // Count completed exercises by muscle group
+    // Note: We need to map exercise names back to muscle groups
+    // For now, we'll use a simple approach based on exercise database
+    completedExercises.forEach(exerciseLog => {
+      // Find the muscle group for this exercise from the exercise database
+      const exercise = exercises.find(ex => ex.name === exerciseLog.exerciseName);
+      if (exercise && exercisesByMuscleGroup.hasOwnProperty(exercise.muscleGroup)) {
+        exercisesByMuscleGroup[exercise.muscleGroup]++;
+      }
+    });
+    
+    // Format the summary
+    const summaryParts = activeWorkout.selectedMuscleGroups
+      .map(group => {
+        const count = exercisesByMuscleGroup[group];
+        const groupName = group.charAt(0).toUpperCase() + group.slice(1);
+        return `${groupName} ${count}`;
+      })
+      .filter(part => !part.endsWith(' 0')); // Only show groups with exercises
+    
+    return summaryParts.length > 0 ? summaryParts.join(', ') : 'No exercises completed';
+  };
+
   const calculateExerciseVolume = (sets: ExerciseSetLog[]) => {
     return sets.reduce((total, set) => total + (set.weight * set.reps), 0);
+  };
+
+  const calculateAverageWeightAndReps = (sets: ExerciseSetLog[]) => {
+    if (sets.length === 0) return '0 lbs × 0';
+    
+    const totalWeight = sets.reduce((sum, set) => sum + set.weight, 0);
+    const totalReps = sets.reduce((sum, set) => sum + set.reps, 0);
+    
+    const avgWeight = Math.round(totalWeight / sets.length);
+    const avgReps = Math.round(totalReps / sets.length);
+    
+    return `${avgWeight} lbs × ${avgReps}`;
+  };
+
+  const calculateExerciseDuration = (exercise: ExerciseLog) => {
+    if (!exercise.t_complete || exercise.sets.length === 0) return '0 min';
+    
+    const startTime = new Date(exercise.t_create);
+    const endTime = new Date(exercise.t_complete);
+    const durationMs = endTime.getTime() - startTime.getTime();
+    const durationMinutes = Math.round(durationMs / (1000 * 60));
+    
+    return `${durationMinutes} min`;
   };
 
   const calculateTotalVolume = () => {
@@ -123,16 +182,12 @@ export const WorkoutProgress: React.FC = () => {
           <Text style={styles.summaryTitle}>📊 Workout Summary</Text>
           <View style={styles.summaryGrid}>
             <View style={styles.summaryItem}>
-              <Text style={styles.summaryValue}>{completedExercises.length}</Text>
-              <Text style={styles.summaryLabel}>Exercises</Text>
+              <Text style={styles.summaryValue}>{getWorkoutTypesSummary()}</Text>
+              <Text style={styles.summaryLabel}>Exercises by Type</Text>
             </View>
             <View style={styles.summaryItem}>
-              <Text style={styles.summaryValue}>{totalSets}</Text>
-              <Text style={styles.summaryLabel}>Total Sets</Text>
-            </View>
-            <View style={styles.summaryItem}>
-              <Text style={styles.summaryValue}>{formatVolume(totalVolume)}</Text>
-              <Text style={styles.summaryLabel}>Volume (lbs)</Text>
+              <Text style={styles.summaryValue}>{getWorkoutDuration()}</Text>
+              <Text style={styles.summaryLabel}>Duration</Text>
             </View>
           </View>
         </View>
@@ -166,36 +221,48 @@ export const WorkoutProgress: React.FC = () => {
               <Text style={styles.sectionCount}>{completedExercises.length}</Text>
             </View>
             
-            {completedExercises.map((exercise, index) => (
-              <View key={exercise.id} style={styles.exerciseCard}>
-                <View style={styles.exerciseHeader}>
-                  <Text style={styles.exerciseName}>{exercise.exerciseName}</Text>
-                  <Text style={styles.exerciseVolume}>
-                    {formatVolume(calculateExerciseVolume(exercise.sets))} lbs
-                  </Text>
-                </View>
-                
-                <View style={styles.setsContainer}>
-                  {exercise.sets.map((set, setIndex) => (
-                    <View key={setIndex} style={styles.setItem}>
-                      <Text style={styles.setNumber}>Set {setIndex + 1}</Text>
-                      <Text style={styles.setDetails}>
-                        {formatSetDisplay(set.weight, set.reps)}
+            {completedExercises.map((exercise, index) => {
+              // Find the muscle group for this exercise
+              const exerciseData = exercises.find(ex => ex.name === exercise.exerciseName);
+              const muscleGroup = exerciseData?.muscleGroup;
+              const muscleGroupLabel = muscleGroup ? muscleGroup.charAt(0).toUpperCase() + muscleGroup.slice(1) : '';
+              
+              return (
+                <View key={exercise.id} style={styles.exerciseCard}>
+                  <View style={styles.exerciseHeader}>
+                    <View style={styles.exerciseNameContainer}>
+                      <Text style={styles.exerciseName}>{exercise.exerciseName}</Text>
+                      {muscleGroupLabel && (
+                        <Text style={styles.muscleGroupLabel}>{muscleGroupLabel}</Text>
+                      )}
+                    </View>
+                    <View style={styles.exerciseStats}>
+                      <Text style={styles.exerciseVolume}>
+                        {calculateAverageWeightAndReps(exercise.sets)}
                       </Text>
-                      <Text style={styles.setTime}>
-                        {formatTime(new Date(set.t_create))}
+                      <Text style={styles.exerciseDuration}>
+                        {calculateExerciseDuration(exercise)}
                       </Text>
                     </View>
-                  ))}
-                </View>
+                  </View>
+                  
+                  <View style={styles.setsContainer}>
+                    {exercise.sets.map((set, setIndex) => (
+                      <View key={setIndex} style={styles.setItem}>
+                        <Text style={styles.setNumber}>Set {setIndex + 1}</Text>
+                        <Text style={styles.setDetails}>
+                          {formatSetDisplay(set.weight, set.reps)}
+                        </Text>
+                        <Text style={styles.setTime}>
+                          {formatTime(new Date(set.t_create))}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
 
-                <View style={styles.exerciseSummary}>
-                  <Text style={styles.exerciseSummaryText}>
-                    {formatExerciseSummary(exercise.sets.length, calculateExerciseVolume(exercise.sets))}
-                  </Text>
                 </View>
-              </View>
-            ))}
+              );
+            })}
           </View>
         )}
 
@@ -344,21 +411,37 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 4,
   },
+  exerciseNameContainer: {
+    flex: 1,
+  },
   exerciseName: {
     fontSize: 16,
     fontWeight: '600',
     color: '#333',
-    flex: 1,
+  },
+  muscleGroupLabel: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 2,
+    fontWeight: '500',
   },
   continueText: {
     fontSize: 14,
     color: '#856404',
     fontWeight: '500',
   },
+  exerciseStats: {
+    alignItems: 'flex-end',
+  },
   exerciseVolume: {
     fontSize: 14,
     color: '#007AFF',
     fontWeight: '600',
+  },
+  exerciseDuration: {
+    fontSize: 12,
+    color: '#007AFF',
+    marginTop: 2,
   },
   setsCount: {
     fontSize: 14,
