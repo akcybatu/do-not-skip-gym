@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { View, StyleSheet } from 'react-native';
 import { LoginScreen } from './src/screens/LoginScreen';
-import { HomePage } from './src/screens/HomePage';
+import { WorkoutScreen } from './src/screens/WorkoutScreen';
 import { useAuthStore } from './src/stores/authStore';
 
 export default function App() {
@@ -18,7 +18,7 @@ export default function App() {
       {!isAuthenticated ? (
         <LoginScreen />
       ) : (
-        <HomePage />
+        <WorkoutScreen />
       )}
     </View>
   );
