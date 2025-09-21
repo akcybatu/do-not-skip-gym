@@ -44,7 +44,8 @@ export const ExerciseList: React.FC = () => {
     selectedMuscleGroups, 
     getExercisesForSelectedGroups,
     addExerciseToWorkout,
-    setCurrentStep 
+    setCurrentStep,
+    exerciseLogs
   } = useWorkoutStore();
 
   const handleBack = () => {
@@ -60,14 +61,19 @@ export const ExerciseList: React.FC = () => {
     const exercises = getExercisesForSelectedGroups();
     const grouped: Record<MuscleGroup, Exercise[]> = {} as Record<MuscleGroup, Exercise[]>;
 
+    // Get completed exercise names to filter them out
+    const completedExerciseNames = exerciseLogs
+      .filter(log => log.t_complete)
+      .map(log => log.exerciseName);
+
     // Initialize groups
     selectedMuscleGroups.forEach(group => {
       grouped[group] = [];
     });
 
-    // Group exercises
+    // Group exercises, filtering out completed ones
     exercises.forEach(exercise => {
-      if (grouped[exercise.muscleGroup]) {
+      if (grouped[exercise.muscleGroup] && !completedExerciseNames.includes(exercise.name)) {
         grouped[exercise.muscleGroup].push(exercise);
       }
     });

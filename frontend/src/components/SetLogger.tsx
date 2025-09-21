@@ -143,6 +143,123 @@ export const SetLogger: React.FC = () => {
         </View>
 
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          {/* Input Section */}
+          <View style={styles.inputSection}>
+            <Text style={styles.sectionTitle}>Log Current Set</Text>
+            
+            {/* Weight Input */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>🏋️ Weight (lbs)</Text>
+              <View style={styles.inputRow}>
+                <TouchableOpacity
+                  style={[
+                    styles.incrementButton,
+                    (!weight || parseFloat(weight) <= 0) && styles.disabledIncrementButton
+                  ]}
+                  onPress={() => {
+                    const currentWeight = parseFloat(weight) || 0;
+                    const newWeight = Math.max(0, currentWeight - 5);
+                    setWeight(newWeight.toString());
+                  }}
+                  disabled={!weight || parseFloat(weight) <= 0}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[
+                    styles.incrementButtonText,
+                    (!weight || parseFloat(weight) <= 0) && styles.disabledIncrementButtonText
+                  ]}>-</Text>
+                </TouchableOpacity>
+                <TextInput
+                  style={styles.inputWithButtons}
+                  placeholder="Enter weight"
+                  value={weight}
+                  onChangeText={setWeight}
+                  keyboardType="numeric"
+                  returnKeyType="next"
+                  maxLength={6}
+                  editable={!isLoading}
+                />
+                <TouchableOpacity
+                  style={styles.incrementButton}
+                  onPress={() => {
+                    const currentWeight = parseFloat(weight) || 0;
+                    const newWeight = currentWeight + 5;
+                    setWeight(newWeight.toString());
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.incrementButtonText}>+</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Reps Input */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>🔁 Reps</Text>
+              <View style={styles.inputRow}>
+                <TouchableOpacity
+                  style={[
+                    styles.incrementButton,
+                    (!reps || parseInt(reps) <= 0) && styles.disabledIncrementButton
+                  ]}
+                  onPress={() => {
+                    const currentReps = parseInt(reps) || 0;
+                    const newReps = Math.max(0, currentReps - 1);
+                    setReps(newReps.toString());
+                  }}
+                  disabled={!reps || parseInt(reps) <= 0}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[
+                    styles.incrementButtonText,
+                    (!reps || parseInt(reps) <= 0) && styles.disabledIncrementButtonText
+                  ]}>-</Text>
+                </TouchableOpacity>
+                <TextInput
+                  style={styles.inputWithButtons}
+                  placeholder="Enter reps"
+                  value={reps}
+                  onChangeText={setReps}
+                  keyboardType="numeric"
+                  returnKeyType="done"
+                  maxLength={3}
+                  editable={!isLoading}
+                />
+                <TouchableOpacity
+                  style={styles.incrementButton}
+                  onPress={() => {
+                    const currentReps = parseInt(reps) || 0;
+                    const newReps = currentReps + 1;
+                    setReps(newReps.toString());
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.incrementButtonText}>+</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Quick Fill */}
+            {currentExercise.sets.length > 0 && (
+              <View style={styles.suggestionsContainer}>
+                <Text style={styles.suggestionsTitle}>Quick Fill</Text>
+                <View style={styles.suggestions}>
+                  <TouchableOpacity
+                    style={styles.suggestionButton}
+                    onPress={() => {
+                      const lastSet = currentExercise.sets[currentExercise.sets.length - 1];
+                      setWeight(lastSet.weight.toString());
+                      setReps(lastSet.reps.toString());
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.suggestionText}>Same as last</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+          </View>
+
           {/* Previous Sets */}
           {currentExercise.sets.length > 0 && (
             <View style={styles.previousSetsContainer}>
@@ -159,73 +276,6 @@ export const SetLogger: React.FC = () => {
               ))}
             </View>
           )}
-
-          {/* Input Section */}
-          <View style={styles.inputSection}>
-            <Text style={styles.sectionTitle}>Log Current Set</Text>
-            
-            {/* Weight Input */}
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>🏋️ Weight (lbs)</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter weight"
-                value={weight}
-                onChangeText={setWeight}
-                keyboardType="numeric"
-                returnKeyType="next"
-                maxLength={6}
-                editable={!isLoading}
-              />
-            </View>
-
-            {/* Reps Input */}
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>🔁 Reps</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter reps"
-                value={reps}
-                onChangeText={setReps}
-                keyboardType="numeric"
-                returnKeyType="done"
-                maxLength={3}
-                editable={!isLoading}
-                onSubmitEditing={handleAddSet}
-              />
-            </View>
-
-            {/* Quick Weight Suggestions */}
-            {currentExercise.sets.length > 0 && (
-              <View style={styles.suggestionsContainer}>
-                <Text style={styles.suggestionsTitle}>Quick Fill</Text>
-                <View style={styles.suggestions}>
-                  <TouchableOpacity
-                    style={styles.suggestionButton}
-                    onPress={() => {
-                      const lastSet = currentExercise.sets[currentExercise.sets.length - 1];
-                      setWeight(lastSet.weight.toString());
-                      setReps(lastSet.reps.toString());
-                    }}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={styles.suggestionText}>Same as last</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.suggestionButton}
-                    onPress={() => {
-                      const lastSet = currentExercise.sets[currentExercise.sets.length - 1];
-                      setWeight((lastSet.weight + 5).toString());
-                      setReps(lastSet.reps.toString());
-                    }}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={styles.suggestionText}>+5 lbs</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            )}
-          </View>
         </ScrollView>
 
         {/* Action Buttons */}
@@ -244,7 +294,7 @@ export const SetLogger: React.FC = () => {
               styles.addSetButtonText,
               (!weight || !reps) && styles.disabledButtonText,
             ]}>
-              {isLoading ? 'Adding Set...' : '➕ Add Set'}
+              {isLoading ? 'Adding Set...' : 'Add Set'}
             </Text>
           </TouchableOpacity>
 
@@ -261,7 +311,7 @@ export const SetLogger: React.FC = () => {
               styles.completeButtonText,
               currentExercise.sets.length === 0 && styles.disabledButtonText,
             ]}>
-              ✅ Complete Exercise
+              Complete Exercise
             </Text>
           </TouchableOpacity>
         </View>
@@ -395,6 +445,53 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontWeight: '600',
   },
+  inputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  inputWithButtons: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 14,
+    fontSize: 18,
+    backgroundColor: '#f8f9fa',
+    textAlign: 'center',
+    fontWeight: '600',
+    marginHorizontal: 4,
+  },
+  incrementButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#FF9500',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#FF9500',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  disabledIncrementButton: {
+    backgroundColor: '#ccc',
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  incrementButtonText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  disabledIncrementButtonText: {
+    color: '#999',
+  },
   suggestionsContainer: {
     marginTop: 8,
   },
@@ -421,6 +518,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   actionContainer: {
+    flexDirection: 'row',
     backgroundColor: '#fff',
     padding: 20,
     borderTopWidth: 1,
@@ -428,10 +526,13 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   addSetButton: {
+    flex: 1,
     backgroundColor: '#007AFF',
-    paddingVertical: 16,
+    paddingVertical: 12,
     borderRadius: 12,
     alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 44,
     shadowColor: '#007AFF',
     shadowOffset: {
       width: 0,
@@ -445,12 +546,17 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+    textAlign: 'center',
   },
   completeButton: {
+    flex: 1,
     backgroundColor: '#4CAF50',
-    paddingVertical: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 8,
     borderRadius: 12,
     alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 44,
     shadowColor: '#4CAF50',
     shadowOffset: {
       width: 0,
@@ -464,6 +570,9 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+    textAlign: 'center',
+    lineHeight: 22,
+    letterSpacing: 0.2,
   },
   disabledButton: {
     backgroundColor: '#ccc',
