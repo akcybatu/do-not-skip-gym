@@ -85,9 +85,6 @@ export const ExerciseList: React.FC = () => {
 
   const renderSectionHeader = ({ section }: { section: ExerciseSection }) => (
     <View style={styles.sectionHeader}>
-      <Text style={styles.sectionIcon}>
-        {MUSCLE_GROUP_ICONS[section.muscleGroup]}
-      </Text>
       <Text style={styles.sectionTitle}>{section.title}</Text>
       <View style={styles.sectionBadge}>
         <Text style={styles.sectionBadgeText}>{section.data.length}</Text>
@@ -95,19 +92,18 @@ export const ExerciseList: React.FC = () => {
     </View>
   );
 
-  const renderExerciseItem = ({ item }: { item: Exercise }) => (
+  const renderExerciseItem = ({ item, index, section }: { item: Exercise, index: number, section: ExerciseSection }) => (
     <TouchableOpacity
-      style={styles.exerciseItem}
+      style={[
+        styles.exerciseItem,
+        index === 0 && styles.firstExerciseItem
+      ]}
       onPress={() => handleExerciseSelect(item)}
       activeOpacity={0.7}
     >
       <View style={styles.exerciseContent}>
-        <Text style={styles.exerciseIcon}>{item.icon}</Text>
         <View style={styles.exerciseDetails}>
           <Text style={styles.exerciseName}>{item.name}</Text>
-          <Text style={styles.exerciseMuscleGroup}>
-            {MUSCLE_GROUP_LABELS[item.muscleGroup]}
-          </Text>
         </View>
       </View>
       <View style={styles.selectIndicator}>
@@ -149,7 +145,7 @@ export const ExerciseList: React.FC = () => {
           {selectedMuscleGroups.map((group, index) => (
             <View key={group} style={styles.groupChip}>
               <Text style={styles.groupChipText}>
-                {MUSCLE_GROUP_ICONS[group]} {MUSCLE_GROUP_LABELS[group]}
+                {MUSCLE_GROUP_LABELS[group]}
               </Text>
             </View>
           ))}
@@ -163,6 +159,7 @@ export const ExerciseList: React.FC = () => {
           keyExtractor={(item) => item.id}
           renderItem={renderExerciseItem}
           renderSectionHeader={renderSectionHeader}
+          renderSectionFooter={() => <View style={styles.sectionFooter} />}
           style={styles.exerciseList}
           contentContainerStyle={styles.exerciseListContent}
           showsVerticalScrollIndicator={false}
@@ -255,6 +252,7 @@ const styles = StyleSheet.create({
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     backgroundColor: '#fff',
     paddingHorizontal: 20,
     paddingVertical: 12,
@@ -269,15 +267,10 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 2,
   },
-  sectionIcon: {
-    fontSize: 20,
-    marginRight: 12,
-  },
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
     color: '#333',
-    flex: 1,
   },
   sectionBadge: {
     backgroundColor: '#007AFF',
@@ -291,6 +284,9 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 12,
     fontWeight: '600',
+  },
+  sectionFooter: {
+    height: 12,
   },
   exerciseItem: {
     backgroundColor: '#fff',
@@ -309,14 +305,11 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 2,
   },
-  exerciseContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
+  firstExerciseItem: {
+    marginTop: 12,
   },
-  exerciseIcon: {
-    fontSize: 20,
-    marginRight: 12,
+  exerciseContent: {
+    flex: 1,
   },
   exerciseDetails: {
     flex: 1,
@@ -325,11 +318,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
     color: '#333',
-    marginBottom: 2,
-  },
-  exerciseMuscleGroup: {
-    fontSize: 12,
-    color: '#666',
   },
   selectIndicator: {
     marginLeft: 12,

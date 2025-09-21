@@ -18,14 +18,14 @@ interface MuscleGroupOption {
 }
 
 const MUSCLE_GROUP_OPTIONS: MuscleGroupOption[] = [
-  { id: 'back', label: 'Back', icon: '💪', description: 'Pull-ups, Rows, Deadlifts' },
-  { id: 'chest', label: 'Chest', icon: '🏋️', description: 'Bench Press, Push-ups, Flyes' },
-  { id: 'shoulder', label: 'Shoulder', icon: '🤸', description: 'Overhead Press, Lateral Raises' },
-  { id: 'biceps', label: 'Biceps', icon: '💪', description: 'Curls, Hammer Curls' },
-  { id: 'triceps', label: 'Triceps', icon: '🔨', description: 'Dips, Pushdowns, Extensions' },
-  { id: 'legs', label: 'Legs', icon: '🦵', description: 'Squats, Lunges, Leg Press' },
-  { id: 'abs', label: 'Abs', icon: '🏃', description: 'Crunches, Planks, Twists' },
-  { id: 'cardio', label: 'Cardio', icon: '🏃‍♂️', description: 'Treadmill, Bike, Elliptical' },
+  { id: 'back', label: 'Back', icon: '', description: '• Pull-ups\n• Rows\n• Deadlifts' },
+  { id: 'chest', label: 'Chest', icon: '', description: '• Bench Press\n• Push-ups\n• Flyes' },
+  { id: 'shoulder', label: 'Shoulder', icon: '', description: '• Overhead Press\n• Lateral Raises\n• Front Raises' },
+  { id: 'biceps', label: 'Biceps', icon: '', description: '• Barbell Curls\n• Hammer Curls\n• Preacher Curls' },
+  { id: 'triceps', label: 'Triceps', icon: '', description: '• Dips\n• Pushdowns\n• Extensions' },
+  { id: 'legs', label: 'Legs', icon: '', description: '• Squats\n• Lunges\n• Leg Press' },
+  { id: 'abs', label: 'Abs', icon: '', description: '• Crunches\n• Planks\n• Russian Twists' },
+  { id: 'cardio', label: 'Cardio', icon: '', description: '• Treadmill\n• Bike\n• Elliptical' },
 ];
 
 export const WorkoutTypeSelector: React.FC = () => {
@@ -77,10 +77,7 @@ export const WorkoutTypeSelector: React.FC = () => {
       {/* Instructions */}
       <View style={styles.instructionsContainer}>
         <Text style={styles.instructions}>
-          Select the muscle groups you want to train today
-        </Text>
-        <Text style={styles.subInstructions}>
-          You can choose multiple groups for a combined workout
+          Select the muscle groups you{'\n'}want to train today
         </Text>
       </View>
 
@@ -101,19 +98,18 @@ export const WorkoutTypeSelector: React.FC = () => {
                 activeOpacity={0.7}
               >
                 <View style={styles.optionHeader}>
-                  <Text style={styles.optionIcon}>{option.icon}</Text>
+                  <Text style={[
+                    styles.optionLabel,
+                    isSelected && styles.selectedOptionLabel,
+                  ]}>
+                    {option.label}
+                  </Text>
                   {isSelected && (
                     <View style={styles.checkmark}>
                       <Text style={styles.checkmarkText}>✓</Text>
                     </View>
                   )}
                 </View>
-                <Text style={[
-                  styles.optionLabel,
-                  isSelected && styles.selectedOptionLabel,
-                ]}>
-                  {option.label}
-                </Text>
                 <Text style={[
                   styles.optionDescription,
                   isSelected && styles.selectedOptionDescription,
@@ -198,13 +194,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
     textAlign: 'center',
-    marginBottom: 4,
     fontWeight: '500',
-  },
-  subInstructions: {
-    fontSize: 14,
-    color: '#666',
-    textAlign: 'center',
+    lineHeight: 22,
   },
   optionsContainer: {
     flex: 1,
@@ -242,9 +233,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 8,
-  },
-  optionIcon: {
-    fontSize: 24,
   },
   checkmark: {
     width: 20,
