@@ -33,7 +33,8 @@ export const WorkoutTypeSelector: React.FC = () => {
     selectedMuscleGroups, 
     setSelectedMuscleGroups, 
     setCurrentStep, 
-    startWorkout 
+    startWorkout,
+    activeWorkout
   } = useWorkoutStore();
 
   const handleToggleMuscleGroup = (muscleGroup: MuscleGroup) => {
@@ -56,9 +57,10 @@ export const WorkoutTypeSelector: React.FC = () => {
     }
   };
 
-  const handleBack = () => {
-    setCurrentStep('ready');
-    setSelectedMuscleGroups([]);
+  const handleGoToSummary = () => {
+    if (activeWorkout) {
+      setCurrentStep('progress');
+    }
   };
 
   const isSelectionValid = selectedMuscleGroups.length > 0;
@@ -67,11 +69,21 @@ export const WorkoutTypeSelector: React.FC = () => {
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-          <Text style={styles.backButtonText}>← Back</Text>
-        </TouchableOpacity>
-        <Text style={styles.title}>Choose Workout Types</Text>
         <View style={styles.placeholder} />
+        <Text style={styles.title}>Choose Workout Types</Text>
+        <TouchableOpacity 
+          style={[
+            styles.summaryButton, 
+            !activeWorkout && styles.summaryButtonDisabled
+          ]} 
+          onPress={handleGoToSummary}
+          disabled={!activeWorkout}
+        >
+          <Text style={[
+            styles.summaryButtonText,
+            !activeWorkout && styles.summaryButtonTextDisabled
+          ]}>Summary</Text>
+        </TouchableOpacity>
       </View>
 
       {/* Instructions */}
@@ -167,14 +179,25 @@ const styles = StyleSheet.create({
     borderBottomColor: '#e0e0e0',
     backgroundColor: '#fff',
   },
-  backButton: {
+  summaryButton: {
     paddingVertical: 8,
     paddingHorizontal: 12,
+    backgroundColor: '#f0f8ff',
+    borderWidth: 1,
+    borderColor: '#007AFF',
+    borderRadius: 8,
   },
-  backButtonText: {
-    fontSize: 16,
+  summaryButtonDisabled: {
+    backgroundColor: '#f0f0f0',
+    borderColor: '#ccc',
+  },
+  summaryButtonText: {
+    fontSize: 12,
     color: '#007AFF',
-    fontWeight: '500',
+    fontWeight: '600',
+  },
+  summaryButtonTextDisabled: {
+    color: '#999',
   },
   title: {
     fontSize: 18,

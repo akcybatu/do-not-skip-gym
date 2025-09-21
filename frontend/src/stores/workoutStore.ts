@@ -89,12 +89,27 @@ export const useWorkoutStore = create<WorkoutState & WorkoutActions>((set, get) 
 
   // Exercise management actions
   addExerciseToWorkout: (exerciseId: string) => {
-    const { activeWorkout, exercises } = get();
+    const { activeWorkout, exercises, exerciseLogs } = get();
     if (!activeWorkout) return;
 
     const exercise = exercises.find(ex => ex.id === exerciseId);
     if (!exercise) return;
 
+    // Check if there's already an incomplete exercise log for this exercise
+    const existingIncompleteLog = exerciseLogs.find(
+      log => log.exerciseName === exercise.name && !log.t_complete
+    );
+
+    if (existingIncompleteLog) {
+      // Reuse existing incomplete exercise log
+      set(() => ({
+        currentExerciseLogId: existingIncompleteLog.id,
+        currentStep: 'logSets',
+      }));
+      return;
+    }
+
+    // Create new exercise log only if no incomplete one exists
     const exerciseLogId = get().generateId();
     const newExerciseLog: ExerciseLog = {
       id: exerciseLogId,

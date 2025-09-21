@@ -45,11 +45,18 @@ export const ExerciseList: React.FC = () => {
     getExercisesForSelectedGroups,
     addExerciseToWorkout,
     setCurrentStep,
-    exerciseLogs
+    exerciseLogs,
+    activeWorkout
   } = useWorkoutStore();
 
   const handleBack = () => {
     setCurrentStep('selectTypes');
+  };
+
+  const handleGoToSummary = () => {
+    if (activeWorkout) {
+      setCurrentStep('progress');
+    }
   };
 
   const handleExerciseSelect = (exercise: Exercise) => {
@@ -139,7 +146,19 @@ export const ExerciseList: React.FC = () => {
           <Text style={styles.backButtonText}>← Back</Text>
         </TouchableOpacity>
         <Text style={styles.title}>Select Exercise</Text>
-        <View style={styles.placeholder} />
+        <TouchableOpacity 
+          style={[
+            styles.summaryButton, 
+            !activeWorkout && styles.summaryButtonDisabled
+          ]} 
+          onPress={handleGoToSummary}
+          disabled={!activeWorkout}
+        >
+          <Text style={[
+            styles.summaryButtonText,
+            !activeWorkout && styles.summaryButtonTextDisabled
+          ]}>Summary</Text>
+        </TouchableOpacity>
       </View>
 
       {/* Selected Groups Summary */}
@@ -214,8 +233,25 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#333',
   },
-  placeholder: {
-    width: 60,
+  summaryButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: '#f0f8ff',
+    borderWidth: 1,
+    borderColor: '#007AFF',
+    borderRadius: 8,
+  },
+  summaryButtonDisabled: {
+    backgroundColor: '#f0f0f0',
+    borderColor: '#ccc',
+  },
+  summaryButtonText: {
+    fontSize: 12,
+    color: '#007AFF',
+    fontWeight: '600',
+  },
+  summaryButtonTextDisabled: {
+    color: '#999',
   },
   summaryContainer: {
     backgroundColor: '#fff',

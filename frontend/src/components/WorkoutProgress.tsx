@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -12,6 +12,8 @@ import { useWorkoutStore } from '../stores/workoutStore';
 import { ExerciseLog, ExerciseSetLog } from '../types/workout';
 import { formatDuration, formatVolume, formatTime, formatExerciseSummary, formatSetDisplay } from '../utils/formatters';
 
+type SortOption = 'time' | 'type';
+
 export const WorkoutProgress: React.FC = () => {
   const { 
     activeWorkout,
@@ -22,26 +24,21 @@ export const WorkoutProgress: React.FC = () => {
     exercises
   } = useWorkoutStore();
 
+  const [sortBy, setSortBy] = useState<SortOption>('time');
+  const [showSortDropdown, setShowSortDropdown] = useState(false);
+
   const handleAddExercise = () => {
     setCurrentStep('selectExercise');
   };
 
   const handleCompleteWorkout = () => {
-    if (!activeWorkout || exerciseLogs.length === 0) {
-      Alert.alert(
-        'No Exercises Logged',
-        'Please complete at least one exercise before finishing your workout.',
-        [{ text: 'OK' }]
-      );
+    if (!activeWorkout) {
       return;
     }
 
-    const completedExercises = exerciseLogs.filter(log => log.t_complete);
-    const totalSets = completedExercises.reduce((sum, exercise) => sum + exercise.sets.length, 0);
-
     Alert.alert(
       'Complete Workout',
-      `Are you sure you want to complete your workout?\n\n• ${completedExercises.length} exercises completed\n• ${totalSets} total sets logged`,
+      'Are you sure you want to complete your workout?',
       [
         { text: 'Cancel', style: 'cancel' },
         { 
@@ -97,7 +94,7 @@ export const WorkoutProgress: React.FC = () => {
       })
       .filter(part => !part.endsWith(' 0')); // Only show groups with exercises
     
-    return summaryParts.length > 0 ? summaryParts.join(', ') : 'No exercises completed';
+    return summaryParts.length > 0 ? summaryParts.join(', ') : 'N/A';
   };
 
   const calculateExerciseVolume = (sets: ExerciseSetLog[]) => {
@@ -140,7 +137,35 @@ export const WorkoutProgress: React.FC = () => {
   };
 
   const getCompletedExercises = () => {
-    return exerciseLogs.filter(log => log.t_complete);
+    const completed = exerciseLogs.filter(log => log.t_complete);
+    
+    return [...completed].sort((a, b) => {
+      if (sortBy === 'time') {
+        // Sort by completion time (most recent first)
+        return new Date(b.t_complete!).getTime() - new Date(a.t_complete!).getTime();
+      } else {
+        // Sort by workout type (muscle group)
+        const exerciseA = exercises.find(ex => ex.name === a.exerciseName);
+        const exerciseB = exercises.find(ex => ex.name === b.exerciseName);
+        const typeA = exerciseA?.muscleGroup || '';
+        const typeB = exerciseB?.muscleGroup || '';
+        
+        if (typeA === typeB) {
+          // If same muscle group, sort by completion time
+          return new Date(b.t_complete!).getTime() - new Date(a.t_complete!).getTime();
+        }
+        return typeA.localeCompare(typeB);
+      }
+    });
+  };
+
+  const handleSortSelect = (option: SortOption) => {
+    setSortBy(option);
+    setShowSortDropdown(false);
+  };
+
+  const getSortLabel = (option: SortOption) => {
+    return option === 'time' ? 'Time' : 'Workout Type';
   };
 
   const getActiveExercise = () => {
@@ -206,9 +231,6 @@ export const WorkoutProgress: React.FC = () => {
                 <Text style={styles.exerciseName}>{activeExercise.exerciseName}</Text>
                 <Text style={styles.continueText}>Continue →</Text>
               </View>
-              <Text style={styles.setsCount}>
-                {activeExercise.sets.length} set{activeExercise.sets.length !== 1 ? 's' : ''} logged
-              </Text>
             </TouchableOpacity>
           </View>
         )}
@@ -218,7 +240,51 @@ export const WorkoutProgress: React.FC = () => {
           <View style={styles.completedContainer}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>✅ Completed Exercises</Text>
-              <Text style={styles.sectionCount}>{completedExercises.length}</Text>
+              <View style={styles.sectionHeaderRight}>
+                <View style={styles.sortContainer}>
+                  <Text style={styles.sortLabel}>⇅</Text>
+                  <TouchableOpacity
+                    style={styles.sortDropdown}
+                    onPress={() => setShowSortDropdown(!showSortDropdown)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.sortDropdownText}>{getSortLabel(sortBy)}</Text>
+                    <Text style={styles.dropdownArrow}>{showSortDropdown ? '▲' : '▼'}</Text>
+                  </TouchableOpacity>
+                  
+                  {showSortDropdown && (
+                    <View style={styles.sortOptions}>
+                      <TouchableOpacity
+                        style={[
+                          styles.sortOption,
+                          sortBy === 'time' && styles.sortOptionSelected,
+                        ]}
+                        onPress={() => handleSortSelect('time')}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={[
+                          styles.sortOptionText,
+                          sortBy === 'time' && styles.sortOptionTextSelected,
+                        ]}>Time</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={[
+                          styles.sortOption,
+                          styles.sortOptionLast,
+                          sortBy === 'type' && styles.sortOptionSelected,
+                        ]}
+                        onPress={() => handleSortSelect('type')}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={[
+                          styles.sortOptionText,
+                          sortBy === 'type' && styles.sortOptionTextSelected,
+                        ]}>Workout Type</Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                </View>
+              </View>
             </View>
             
             {completedExercises.map((exercise, index) => {
@@ -288,17 +354,10 @@ export const WorkoutProgress: React.FC = () => {
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[
-            styles.completeWorkoutButton,
-            completedExercises.length === 0 && styles.disabledButton,
-          ]}
+          style={styles.completeWorkoutButton}
           onPress={handleCompleteWorkout}
-          disabled={completedExercises.length === 0}
         >
-          <Text style={[
-            styles.completeWorkoutButtonText,
-            completedExercises.length === 0 && styles.disabledButtonText,
-          ]}>
+          <Text style={styles.completeWorkoutButtonText}>
             🏁 Complete Workout
           </Text>
         </TouchableOpacity>
@@ -389,6 +448,84 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#333',
+  },
+  sectionHeaderRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  sortContainer: {
+    position: 'relative',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  sortLabel: {
+    fontSize: 14,
+    color: '#666',
+    fontWeight: '600',
+  },
+  sortDropdown: {
+    backgroundColor: '#f0f8ff',
+    borderWidth: 1,
+    borderColor: '#007AFF',
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    minWidth: 100,
+  },
+  sortDropdownText: {
+    fontSize: 12,
+    color: '#007AFF',
+    fontWeight: '500',
+    flex: 1,
+  },
+  dropdownArrow: {
+    fontSize: 10,
+    color: '#007AFF',
+  },
+  sortOptions: {
+    position: 'absolute',
+    top: 32,
+    right: 0,
+    backgroundColor: 'white',
+    borderWidth: 1,
+    borderColor: '#007AFF',
+    borderRadius: 8,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    zIndex: 1000,
+    minWidth: 120,
+  },
+  sortOption: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  sortOptionSelected: {
+    backgroundColor: '#f0f8ff',
+  },
+  sortOptionText: {
+    fontSize: 12,
+    color: '#333',
+    fontWeight: '500',
+  },
+  sortOptionTextSelected: {
+    color: '#007AFF',
+    fontWeight: '600',
+  },
+  sortOptionLast: {
+    borderBottomWidth: 0,
   },
   sectionCount: {
     fontSize: 14,

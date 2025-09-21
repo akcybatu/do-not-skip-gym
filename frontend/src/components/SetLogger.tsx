@@ -21,7 +21,8 @@ export const SetLogger: React.FC = () => {
     addSetToExercise,
     completeExercise,
     setCurrentStep,
-    currentExerciseLogId 
+    currentExerciseLogId,
+    activeWorkout
   } = useWorkoutStore();
 
   const [weight, setWeight] = useState('');
@@ -38,6 +39,12 @@ export const SetLogger: React.FC = () => {
 
   const handleBack = () => {
     setCurrentStep('selectExercise');
+  };
+
+  const handleGoToSummary = () => {
+    if (activeWorkout) {
+      setCurrentStep('progress');
+    }
   };
 
   const validateInputs = (): boolean => {
@@ -139,7 +146,19 @@ export const SetLogger: React.FC = () => {
             <Text style={styles.exerciseName}>{currentExercise.exerciseName}</Text>
             <Text style={styles.setCounter}>Set {currentExercise.sets.length + 1}</Text>
           </View>
-          <View style={styles.placeholder} />
+          <TouchableOpacity 
+            style={[
+              styles.summaryButton, 
+              !activeWorkout && styles.summaryButtonDisabled
+            ]} 
+            onPress={handleGoToSummary}
+            disabled={!activeWorkout}
+          >
+            <Text style={[
+              styles.summaryButtonText,
+              !activeWorkout && styles.summaryButtonTextDisabled
+            ]}>Summary</Text>
+          </TouchableOpacity>
         </View>
 
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
@@ -362,8 +381,25 @@ const styles = StyleSheet.create({
     color: '#666',
     marginTop: 2,
   },
-  placeholder: {
-    width: 60,
+  summaryButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: '#f0f8ff',
+    borderWidth: 1,
+    borderColor: '#007AFF',
+    borderRadius: 8,
+  },
+  summaryButtonDisabled: {
+    backgroundColor: '#f0f0f0',
+    borderColor: '#ccc',
+  },
+  summaryButtonText: {
+    fontSize: 12,
+    color: '#007AFF',
+    fontWeight: '600',
+  },
+  summaryButtonTextDisabled: {
+    color: '#999',
   },
   content: {
     flex: 1,
